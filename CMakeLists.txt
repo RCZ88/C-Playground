@@ -31,6 +31,8 @@ add_executable(LEARN_abC
 #        TrackVault/shiftbits.c
 #        socs280926.c
         socs051026.c
+        HeapTree.c
+        HeapTree.h
         #        TrackVault/index.c
 #        TrackVault/index.h
 #        TrackVault/format.h
