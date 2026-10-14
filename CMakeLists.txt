@@ -10,36 +10,40 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
 add_executable(LEARN_abC
-#        printMem.c
-#        decimalBinary.c
-#        bitFields.c
-#        LW01IO.c
-#        decimalBinary.c
-#        psuedobullshit.c
-#        TrackVault/bytes.h
-#        TrackVault/flags.c
-#        TrackVault/flags.h
-#        TrackVault/serialization.h
-#        TrackVault/serialization.c
-#        TrackVault/tests.c
-#        TrackVault/write.c
-#        TrackVault/arena.h
-#        TrackVault/arena.c
-#        TrackVault/library.c
-#        TrackVault/library.h
-#        socs210926.c
-#        TrackVault/shiftbits.c
-#        socs280926.c
-#        socs051026.c
-#        HeapTree.c
-#        HeapTree.h
-        OJNAR12102026.c
-        #        TrackVault/index.c
-#        TrackVault/index.h
-#        TrackVault/format.h
-#        TrackVault/format.c
-#        TrackVault/record.h
-#        TrackVault/record.c
+        #       printMem.c
+        #       decimalBinary.c
+        #       bitFields.c
+        #       LW01IO.c
+        #       decimalBinary.c
+        #       psuedobullshit.c
+        #       TrackVault/bytes.h
+        #       TrackVault/flags.c
+        #       TrackVault/flags.h
+        #       TrackVault/serialization.h
+        #       TrackVault/serialization.c
+        #       TrackVault/tests.c
+        #       TrackVault/write.c
+        #       TrackVault/arena.h
+        #       TrackVault/arena.c
+        #       TrackVault/library.c
+        #       TrackVault/library.h
+        #       socs210926.c
+        #       TrackVault/shiftbits.c
+        #       socs280926.c
+        #       socs051026.c
+        #       HeapTree.c
+        #       HeapTree.h
+        #       OJNAR12102026.c
+        NAR/BattleShip.c
+        SALOK.c
+        SALOK.h
+        NAR/BlackJack.c
+        #       TrackVault/index.c
+        #       TrackVault/index.h
+        #       TrackVault/format.h
+        #       TrackVault/format.c
+        #       TrackVault/record.h
+        #       TrackVault/record.c
 )
 
 if (UNIX AND NOT APPLE)
