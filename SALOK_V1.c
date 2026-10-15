@@ -1,9 +1,14 @@
 //
+// Created by clementzhao on 15/10/2026.
+//
+
+
+//
 // Created by clementzhao on 13/10/2026.
 //
 
 //SALOK = SMART MEMORY ALLOCATION
-#include "SALOK.h"
+#include "SALOK_V2.h"
 
 
 static void handleFull() {
@@ -59,36 +64,4 @@ static HeapMD reallocc(void* ptr, const size_t size, const int line) {
     return heaps[count-1];
 }
 
-static bool linSearch(void *key, void *foundArr[], int foundCount) {
-    for (int i = 0; i < foundCount; i++) {
-        if (foundArr[i] == key) {
-            return true;
-        }
-    }
-    return false;
-}
-
-static void freee() {
-    void *foundArr[count];
-    int foundCount = 0;
-
-    for (int i = 0; i < count; i++) {
-        if (!linSearch(heaps[i].heap, foundArr, foundCount)) {
-            foundArr[foundCount++] = heaps[i].heap;
-            free(heaps[i].heap);
-        }
-    }
-
-    free(heaps);
-}
-
-static void freeOne(const int line) {
-    for (int i = 0; i<count; i++) {
-        if (heaps[i].line == line) {
-            free(heaps[i].heap);
-            heaps[i].freed = true;
-            break;
-        }
-    }
-}
 

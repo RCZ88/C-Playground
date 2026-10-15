@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "../SALOK.h"
+#include "../SALOK_V2.h"
 
 typedef struct{
     char rank;
@@ -23,8 +23,10 @@ typedef struct {
 static Player *players;
 static int numPlayers;
 
-Card* initCards() {
-    Card *cards = callocc(52, sizeof(Card), __LINE__).heap;
+
+
+DA_TYPE(Card) initCards() {
+    DynamicArr cards = arr(52, sizeof(Card), __LINE__);
     char cardRanks[13];
     for (int i = 1; i <=9; i++) {
         cardRanks[i] = (char) (i + '0');
@@ -40,10 +42,10 @@ Card* initCards() {
         if (i >= 10) {
             value = 10;
         }
-        cards[i] = (Card){
+        addItem(&cards, &(Card){
         .rank = cardRanks[i],
         .value = value,
-        };
+        });
     }
     return cards;
 }
@@ -81,6 +83,29 @@ int stringToInt(char *string) {
     return num;
 }
 
+
+DynamicArr splitString(char *str, char splitChar) {
+    int initSize =2;
+    DynamicArr strs = arr(initSize, sizeof(DynamicArr*), __LINE__);
+    int itemCount = 0;
+
+    int strIndex = 0;
+    int strLen = 0;
+    while (str[strIndex] != '\0') {
+        if (str[strIndex] == splitChar) {
+            strLen = 0;
+            addItem(&strs, getDat(arr(initSize, sizeof(char), __LINE__)));
+            memcpy(&getDat(strs)[itemCount++], &str[strIndex++], strLen);
+
+            continue;
+        }
+        strLen++;
+        strIndex++;
+        // strs[itemCount][charIndex++] = *str++;
+    }
+    return strs;
+}
+
 void loadPlayersData(char *filePath) {
     FILE *fp = fopen(filePath, "rw");
     fseek(fp, 0, SEEK_END);
@@ -89,43 +114,29 @@ void loadPlayersData(char *filePath) {
     if (size < 0) {
         fclose(fp);
     }
-    char *buffer = callocc((size_t)size + 1, sizeof(char), __LINE__).heap;
+    char *buffer = arr((size_t)size + 1, sizeof(char), __LINE__);
     size_t bytesRead = fread(buffer, 1, (size_t)size, fp);
     buffer[bytesRead] = '\0';
 
-
+    splitString(buffer, '\n' )
 }
 
-char **splitString(char *str, char splitChar, size_t lines, size_t maxLength) {
-    char **strs = callocc(lines, sizeof(char*), __LINE__).heap;
-    int itemCount = 0;
-    strs[itemCount] = callocc(lines, sizeof(char), __LINE__).heap;
-    int charIndex = 0;
-    while (*str != '\0') {
-        if (*str == splitChar) {
-            charIndex = 0;
-            strs[++itemCount] = callocc(maxLength, sizeof(char), __LINE__).heap;
-            continue;
-        }
-        strs[itemCount][charIndex++] = *str++;
-    }
-    return strs;
-}
 
 Player constructPlayer(char *playerData) {
-    char *name = callocc(21, sizeof(char), __LINE__).heap;
-    char *password = callocc(21, sizeof(char), __LINE__).heap;
+    DynamicArr name = arr(21, sizeof(char), __LINE__);
+    DynamicArr password = arr(21, sizeof(char), __LINE__);
+
     int wins;
     int i = 0;
     int charICount = 0;
     while (playerData[i] != '#') {
-        name[charICount++] = playerData[i];
+        addItem(&name, &playerData[i]);
         i++;
     }
     i++;
     charICount = 0;
     while (playerData[i] != '#') {
-        password[charICount++] = playerData[i];
+        addItem(&password, &playerData[i]);
         i++;
     }
     charICount = 0;
@@ -138,8 +149,8 @@ Player constructPlayer(char *playerData) {
     wins = stringToInt(winsString);
 
     return (Player){
-        .name = name,
-        .password = password,
+        .name = *name.heap,
+        .password = *password.heap,
         .wins = wins,
     };
 }
@@ -199,46 +210,47 @@ SPR findPlayer(char *playerName) {
 
 
 
+
 Player registration() {
-    char *name = callocc(20, sizeof(char), __LINE__).heap;
-    char *tempName = callocc(1000, sizeof(char), __LINE__).heap;
+    DynamicArr name = arr(20, sizeof(char), __LINE__);
+    DynamicArr tempName = arr(1000, sizeof(char), __LINE__);
     while (true) {
         printf("Enter a Username (2-20 chars): ");
-        scanf("%s", tempName);
-        if (strlen(tempName) > 20 || strlen(tempName) < 2) {
+        scanf("%s", (char*)getDat(tempName));
+        if (strlen(getDat(tempName)) > 20 || strlen(getDat(tempName)) < 2) {
             printf("Too long or too short (2-20)");
             continue;
         }
-        if (findPlayer(tempName).found) {
+        if (findPlayer(getDat(tempName)).found) {
             printf("Username Exists, Choose a different one!");
             continue;
         }
-        strcpy(name, tempName);
-        freee(tempName);
+        strcpy(*name.heap, *tempName.heap);
+        deleteArr(tempName);
         break;
     }
 
-    char *password = callocc(20, sizeof(char), __LINE__).heap;
-    char *tempPass = callocc(1000, sizeof(char), __LINE__).heap;
+    DynamicArr password = arr(20, sizeof(char), __LINE__);
+    DynamicArr tempPass = arr(1000, sizeof(char), __LINE__);
     while (true) {
         printf("Enter a Letter Only Password (2-20 chars): ");
-        scanf("%s", tempPass);
-        if (strlen(tempPass) > 20 || strlen(tempName) < 2) {
+        scanf("%s", (char*)getDat(password));
+        if (strlen(getDat(tempPass)) > 20 || strlen(getDat(tempName)) < 2) {
             printf("Too long or too short (2-20)");
             continue;
         }
-        if (!isAlphanumeric(tempPass)) {
+        if (!isAlphanumeric(getDat(tempPass))) {
             printf("Must ONLY contain alphabets!");
             continue;
         }
-        strcpy(password, tempName);
-        freee(tempPass);
+        strcpy(getDat(password), getDat(tempPass));
+        deleteArr(tempPass);
         break;
     }
 
     Player player = (Player){
-        .name = name,
-        .password = password,
+        .name = getDat(name),
+        .password = getDat(password),
         .wins = 0};
     savePlayer(player);
     return player;
@@ -269,6 +281,8 @@ Player handleLogin() {
     }
     return player;
 }
+
+
 
 void handleGame() {
 

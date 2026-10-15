@@ -57,9 +57,9 @@ typedef struct {
     int line;
     int index;
     bool freed;
-}HeapMD;
+}List;
 
-static HeapMD *heaps;
+static List *heaps;
 static int count =0;
 static uint32_t cap;
 
@@ -73,16 +73,16 @@ static void handleFull() {
 
 
 static void initHeaps(const uint32_t capacity) {
-    heaps = (HeapMD*)calloc(capacity, sizeof(HeapMD));
-    cap = capacity * sizeof(HeapMD);
+    heaps = (List*)calloc(capacity, sizeof(List));
+    cap = capacity * sizeof(List);
 }
 
 
-static HeapMD callocc(const uint32_t amount, const size_t size, const int line) {
+static List callocc(const uint32_t amount, const size_t size, const int line) {
     void *ptr = calloc(amount, size);
     const size_t total = size * amount;
     handleFull();
-    heaps[count] = (HeapMD){
+    heaps[count] = (List){
         .heap = ptr,
         .size = total,
         .filename = FILENAME,
@@ -94,10 +94,10 @@ static HeapMD callocc(const uint32_t amount, const size_t size, const int line) 
     return heaps[count-1];
 }
 
-static HeapMD reallocc(void* ptr, const size_t size, const int line) {
+static List reallocc(void* ptr, const size_t size, const int line) {
     void* new_ptr = realloc(ptr, size);
     handleFull();
-    heaps[count] = (HeapMD){
+    heaps[count] = (List){
         .heap = new_ptr,
         .size = size,
         .filename = FILENAME,
@@ -217,7 +217,7 @@ static int binaryToDenary(const char *binary) {
 
 
 static void denaryToBinary(int integer, BinaryData *result) {
-    HeapMD ibt_HMD = callocc(100, sizeof(char), __LINE__);
+    List ibt_HMD = callocc(100, sizeof(char), __LINE__);
     char* int_bin_temp = ibt_HMD.heap;
     int size_int = 0;
     printf("pre reversal binary: ");

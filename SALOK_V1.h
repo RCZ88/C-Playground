@@ -1,9 +1,13 @@
 //
+// Created by clementzhao on 15/10/2026.
+//
+
+#ifndef LEARN_ABC_SALOK_V1_H
+#define LEARN_ABC_SALOK_V1_H
+//
 // Created by clementzhao on 13/10/2026.
 //
 
-#ifndef LEARN_ABC_SALOK_H
-#define LEARN_ABC_SALOK_H
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -31,4 +35,4 @@ static HeapMD reallocc(void* ptr, size_t size, int line);
 static void freee();
 static void freeOne(int line);
 
-#endif //LEARN_ABC_SALOK_H
+#endif //LEARN_ABC_SALOK_V1_H

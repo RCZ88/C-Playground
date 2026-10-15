@@ -7,7 +7,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <stdbool.h>
-#include "../SALOK.h"
+#include "../SALOK_V1.h"
 
 #define RED     "\033[31m"
 #define GREEN   "\033[32m"

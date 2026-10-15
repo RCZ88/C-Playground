@@ -35,9 +35,14 @@ add_executable(LEARN_abC
         #       HeapTree.h
         #       OJNAR12102026.c
         NAR/BattleShip.c
-        SALOK.c
-        SALOK.h
+        SALOK_V2.c
+        SALOK_V2.h
         NAR/BlackJack.c
+        NAR/EasyJyToDo.c
+        SALOK_V1.c
+        SALOK_V1.h
+        NAR/LinkedList.c
+        NAR/LinkedList.h
         #       TrackVault/index.c
         #       TrackVault/index.h
         #       TrackVault/format.h
