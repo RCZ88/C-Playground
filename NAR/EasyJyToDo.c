@@ -45,12 +45,15 @@ static int menuCount;
 static int userInputI;
 static char *userInputS;
 static Menu currentMenu;
+static int menuStaticCount;
 
 static Job *jobs;
 static int jobCount;
 static int mainMenuId = 0;
+static Job curJob;
 
 static char *statuses[] = {"ONGOING", "PENDING", "DONE"};
+static Status statusArr[] = {ONGOING, PENDING, DONE};
 
 static Menu constructMenu(int optCount, char** optionsString, MenuHandler handler) {
     Menu menu = (Menu){
@@ -115,16 +118,29 @@ static void handleInputStringRange(int range[], char* inputPrint) {
     }
     memcpy(userInputS, tempUserInput, strlen(tempUserInput));
 }
-static void handleInputStringFind(char *inputPrint, SearchStringAlgo searchAlgo) {
+
+
+static void *handleInputStringFind(char *inputPrint, char *notFoundPrint, SearchStringAlgo searchAlgo, bool failHandlingCustom, MenuHandler handler) {
     char tempUserInput[1000];
+    printf("%s", inputPrint);
     scanf("%s", tempUserInput);
-    bool found = searchAlgo(tempUserInput) == NULL;
-    while (!found) {
-        printf("User Not Found!");
-        printf("%s", inputPrint);
-        scanf("%s", tempUserInput);
-        found = searchAlgo(tempUserInput) == NULL;
+    void *j = searchAlgo(tempUserInput);
+    bool found = j == NULL;
+    if (failHandlingCustom) {
+        while (!found) {
+            printf("%s", notFoundPrint);
+            printf("%s", inputPrint);
+            scanf("%s", tempUserInput);
+            j = searchAlgo(tempUserInput);
+            found = j == NULL;
+        }
+        return j;
     }
+    if (!found) {
+        (*handler)();
+        return NULL;
+    }
+    return j;
 }
 
 static Job *findJob(char *jobName) {
@@ -136,6 +152,10 @@ static Job *findJob(char *jobName) {
     return NULL;
 }
 
+static void *findJobWrapper(char *jobName) {
+    return findJob(jobName);
+}
+
 void printJobs(void) {
     printf("Existing Jobs");
     for (int i = 0; i <jobCount; i++) {
@@ -145,10 +165,14 @@ void printJobs(void) {
 
 void navigate() {
     currentMenu = menus[currentMenu.navToMenuIndex[userInputI]];
+    (*currentMenu.handlers)();
+    menuStaticCount = 0;
 }
 
 void navigateTo(int i) {
     currentMenu = menus[i];
+    (*currentMenu.handlers)();
+    menuStaticCount = 0;
 }
 
 typedef enum {
@@ -177,6 +201,34 @@ void printStates() {
     for (int i = 0; i<3; i++) {
         printf("%s", statuses[i]);
     }
+}
+
+void removeJob(char *jobName) {
+    Job *job = findJob(jobName);
+    for (int i = 0; i<jobCount; i++) {
+        if (&jobs[i] == job) {
+            if (i == jobCount-1) {
+                jobCount--;
+                break;
+            }
+            for (int j = i+1; j<jobCount; j++) {
+                jobs[j-1] = jobs[j];
+            }
+            jobCount--;
+            break;
+        }
+    }
+}
+
+char *deadlineToString(Deadline deadline) {
+    char *months [12] = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "Decenber"};
+    char dateString[100];
+    snprintf(dateString, sizeof(dateString), "%d %s %d", deadline.date, months[deadline.month-1], deadline.year);
+    return dateString;
+}
+
+void printJob(Job job) {
+    printf("\nDeadline: %s\nTask: %s\nStatus: %s\n", deadlineToString(job.deadline), job.name, statuses[job.status-1]);
 }
 
 void handleMainMenu(void) {
@@ -222,19 +274,51 @@ void handleAddJob(void) {
 }
 
 
+void navToMainMenu(void) {
+    return navigateTo(mainMenuId);
+}
+
 void handleUpdateJob(void) {
     printJobs();
-    handleInputStringFind(currentMenu.statics[0], findJob);
+    curJob =  *(Job *)handleInputStringFind(currentMenu.statics[0], currentMenu.statics[1], findJobWrapper, false, NULL);
     printStates();
-    handleInputStringRange((int[]) {1, 3}, currentMenu.statics[1]);
+    handleInputIntRange((int[]) {1, 3}, currentMenu.statics[2]);
+    if (statusArr[userInputI - 1] == DONE) {
+        removeJob(curJob.name);
+        printf("Job Removed!");
+        navToMainMenu();
+        return;
+    }
+    curJob.status = statusArr[userInputI - 1];
+    printf("Job Status Updated to %s", statuses[userInputI - 1]);
+    navigateTo(mainMenuId);
+}
+
+char *getStatic(void) {
+    return currentMenu.statics[menuStaticCount++];
+}
+
+void printStatic(void) {
+    printf("%s", getStatic());
+}
+
+char *getStaticAtIndex(int staticId) {
+    return currentMenu.statics[staticId];
+}
+
+void handleSearchJob(void) {
+    printStatic();
+    handleInputStringFind(getStatic(), "Job Not Found!", findJobWrapper, true, navToMainMenu);
 }
 
 
 int main(int argc, char *argv[]) {
     menus = calloc(6, sizeof(Menu));
     jobs = calloc(100, sizeof(Job));
+
     char *mainMenuOptions[] = {"Add Job", "Update Status", "Search Job Name", "View All Jobs", "Exit"};
     constructMenu(5, mainMenuOptions, handleMainMenu);
+
     char *createJobStatics[] = {
         "Job Name (3-100 characters) = ",
         "Select Status: \n1. ONGOING\n2. PENDING\nChoose =>",
@@ -243,12 +327,21 @@ int main(int argc, char *argv[]) {
     };
 
     constructMenu(5, createJobStatics, handleAddJob);
+
     char *updateStatus[] = {
         "Which Job do you want to update the status of?\n-> ",
-        "CHOOSE=>",
+        "Job not found! Try again\n",
+        "CHOOSE=>\n",
     };
     constructMenu(2, updateStatus, handleUpdateJob);
 
+    char *searchJobMenuStatics[] = {
+        "Which job do you Want to Find?\n"
+        "=>",
+        "Job not Found!"
+        "Press 'Q' to return to main menu. .",
+    };
+    constructMenu(1, searchJobMenuStatics, handleSearchJob);
 }
 
 //push mid, sorted list, insert on the correct spot, ascending

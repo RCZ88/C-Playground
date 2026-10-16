@@ -14,54 +14,70 @@ typedef struct Node{
 }Node;
 
 
-Node getTailNode(Node *node) {
+Node *getTailNode(Node *node) {
     if (node->next == NULL) {
-        return  *node;
+        return node;
     }
     return getTailNode(node->next);
 }
 
 void* getTail(Node *node) {
-    return getTailNode(node).val;
+    return getTailNode(node)->val;
 }
 
-Node getHeadNode(Node *node) {
+Node *getHeadNode(Node *node) {
     if (node->prev != NULL) {
-        return *node;
+        return node;
     }
     return getHeadNode(node->prev);
 }
 
 void* getHead(Node *node) {
-    return getHeadNode(node).val;
+    return getHeadNode(node)->val;
+}
+
+Node *initNode(void *val, Node *next, Node *prev) {
+    Node *ln =  callocc(1, sizeof(Node), __LINE__).heap;
+    *ln = (Node){
+        .val = val,
+        .next = next,
+        .prev = prev
+    };
+    return ln;
+}
+void insert(Node *curNode, Node *insertNode) {
+    if (curNode != NULL) {
+        curNode->next = insertNode;
+        insertNode->prev = curNode;
+    }
+    if (curNode->next != NULL) {
+        curNode->next->prev = insertNode;
+        insertNode->next = curNode->next;
+    }
 }
 
 void insertTail(void* val, Node *node) {
-    Node ln = getTailNode(node);
-    ln.next = callocc(1, sizeof(Node), __LINE__).heap;
-    Node n = (Node){
-        .val = val,
-        .next = NULL,
-        .prev = &ln,
-    };
-    ln.next = &n;
+    Node *ln = getTailNode(node);
+    ln->next = callocc(1, sizeof(Node), __LINE__).heap;
+    Node *newNode = initNode(val, NULL, ln);
+    insert(ln, newNode);
 }
 
 void insertHead(void* val, Node *node) {
-    Node ln = getHeadNode(node);
-    ln.prev = callocc(1, sizeof(Node), __LINE__).heap;
+    Node *ln = getHeadNode(node);
+    ln->prev = callocc(1, sizeof(Node), __LINE__).heap;
     Node n = (Node){
     .val = val,
-    .next = &ln,
+    .next = ln,
     .prev = NULL};
-    ln.prev = &n;
+    ln->prev = &n;
 }
 
 int getSize(Node *node) {
-    Node ln = getHeadNode(node);
+    Node *ln = getHeadNode(node);
     int c = 0;
-    while (ln.next != NULL) {
-        ln = *ln.next;
+    while (ln->next != NULL) {
+        ln = ln->next;
         c++;
     }
     return c;
@@ -75,35 +91,37 @@ typedef enum {
 }Type;
 
 Node *find(void *val, Node node, Type type) {
-    Node ln = getHeadNode(&node);
-    while (ln.next != NULL) {
+    Node *ln = getHeadNode(&node);
+    while (ln->next != NULL) {
         switch (type) {
             case INT:
-                if (*(int *)ln.val == *(int *)val) {
-                    return &ln;
+                if (*(int *)ln->val == *(int *)val) {
+                    return ln;
                 }
                 break;
             case STRING:
-                if (*(char **)ln.val == *(char **)val) {
-                    return &ln;
+                if (*(char **)ln->val == *(char **)val) {
+                    return ln;
                 }
                 break;
             case CHAR:
-                if (*(char *)ln.val == *(char *)val) {
-                    return &ln;
+                if (*(char *)ln->val == *(char *)val) {
+                    return ln;
                 }
                 break;
             case DOUBLE:
-                if (*(double *)ln.val == *(double *)val) {
-                    return &ln;
+                if (*(double *)ln->val == *(double *)val) {
+                    return ln;
                 }
                 break;
         }
 
-        ln = *ln.next;
+        ln = ln->next;
     }
     return NULL;
 }
+
+
 
 void insertMiddle(void *val, Node *node, Type type) {
     bool condition = false;
@@ -127,7 +145,7 @@ void insertMiddle(void *val, Node *node, Type type) {
             n->prev = NULL;
             n->next = NULL;
             n->val = val;
-            if (node->prev != NULL) {
+            /*if (node->prev != NULL) {
                 n->prev = node;
                 node->next = n;
 
@@ -135,24 +153,56 @@ void insertMiddle(void *val, Node *node, Type type) {
             if (node->next != NULL) {
                 node->next->prev = n;
                 n->next = node->next;
-            }
+            }*/
+            insert(node, n);
             return;
         }
         node = node->next;
     }
 }
 
-void remove(void *val, Node *node, Type type) {
+
+
+void *insertAt(void *val, Node *node, int index) {
+    if (index > getSize(node)) {
+        return NULL;
+    }
+    Node *curNode = getHeadNode(node);
+    for (int i = 0; i<index-1; i++) {
+        curNode = curNode->next;
+    }
+    Node *n = initNode(val, NULL, NULL);
+    insert(curNode, n);
+}
+void remove(Node *deleteNode) {
+    deleteNode->prev->next = NULL;
+    deleteNode->next->prev = NULL;
+    if (deleteNode->next != NULL) {
+        deleteNode->next->prev = deleteNode->prev;
+    }
+    if (deleteNode->prev != NULL) {
+        deleteNode->prev->next = deleteNode->next;
+    }
+}
+
+void removeVal(void *val, Node *node, Type type) {
     Node *toRemove = find(val, *node, type);
     if (toRemove != NULL) {
-        toRemove->prev->next = NULL;
-        toRemove->next->prev = NULL;
-        if (toRemove->next != NULL) {
-            toRemove->next->prev = toRemove->prev;
-        }
-        if (toRemove->prev != NULL) {
-            toRemove->prev->next = toRemove->next;
-        }
+        remove(toRemove);
+    }
+}
+
+void removeTail(Node *node) {
+    Node *tr = getTailNode(node);
+    if (tr != NULL) {
+        remove(tr);
+    }
+}
+
+void removeHead(Node *node) {
+    Node *tr = getHeadNode(node);
+    if (tr != NULL) {
+        remove(tr);
     }
 }
 

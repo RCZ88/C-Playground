@@ -62,7 +62,7 @@ int indexOf(void *val, Node *node, Type type);
 bool contains(void *val, Node *node, Type type);
 
 /* Removal */
-void remove(void *val, Node *node, Type type);
+void removeVal(void *val, Node *node, Type type);
 
 inline void removeAt(Node *node, int index) {
 }

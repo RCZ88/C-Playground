@@ -43,6 +43,7 @@ add_executable(LEARN_abC
         SALOK_V1.h
         NAR/LinkedList.c
         NAR/LinkedList.h
+        NAR/TheGaje.c
         #       TrackVault/index.c
         #       TrackVault/index.h
         #       TrackVault/format.h
