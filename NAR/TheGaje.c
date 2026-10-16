@@ -33,6 +33,8 @@ typedef struct {
     Cords cords;
     int speed;
     int jumpHeight;
+    bool landed;
+    int jumpStreakCount;
 }Player;
 
 typedef enum {
@@ -62,7 +64,7 @@ typedef struct {
     Cords moveDirection;
     Cords curLocation;
     Cords originalLocation;
-    int delayBetweenMove;
+    int movSpeed;
     int hp;
     int dmg;
 }Entity;
@@ -82,6 +84,9 @@ typedef struct {
 }Map;
 
 
+static Player *currentPlayer;
+static Map *currentMap;
+
 Cords cord(int x, int y) {
     return (Cords){
         .x = x,
@@ -89,8 +94,7 @@ Cords cord(int x, int y) {
     };
 }
 
-void renderToScreen(Map *map, Player player) {
-
+void updateScreenMatrix(Map *map, Player player) {
     for (int i = 0; i<map->platformCount; i++) {
         Size platformSize = map->platforms[i]->size;
         Cords platformCords = map->platforms[i]->cords;
@@ -131,6 +135,18 @@ Env initEnv(Cords cords, CharRep type) {
     .type = type};
 }
 
+Env initHeal(Cords cords, int healAmount) {
+    Env ret = initEnv(cords, HEAL);
+    ret.heal = healAmount;
+    return ret;
+}
+
+Env initCoin(Cords cords, int point) {
+    Env ret = initEnv(cords, COIN);
+    ret.points = point;
+    return ret;
+}
+
 Entity initEnemy(Cords cords, int damage, int hp) {
 
 }
@@ -139,15 +155,44 @@ int calcDistance(Cords a , Cords b) {
     return  (int)sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2));
 }
 
+void reverseDirection(Entity *entity) {
+    entity->moveDirection = cord(entity->moveDirection.x * -1, entity->moveDirection.y & -1);
+}
+void entityMove(Entity *entity) {
+    entity->curLocation = cord(entity->curLocation.x + entity->moveDirection.x * entity->movSpeed, entity->curLocation.y + entity->moveDirection.y * entity->movSpeed);
+}
+
 void handleEntityMovement(Map *map) {
     for (int i = 0; i<map->entitiesCount; i++) {
         Entity *entity = map->entities[i];
         int distanceFromInitial = calcDistance(entity->curLocation , entity->originalLocation);
-        if (distanceFromInitial == 0) {
-
+        if (distanceFromInitial == 0 || distanceFromInitial == entity->moveRange) {
+            reverseDirection(entity);
+            continue;
         }
+        entityMove(entity);
     }
 }
+
+
+bool isTouching(Player player, Map map, CharRep touchingWhat, Cords *checkRelativeToUser, int amtToCheck) {
+    for (int i = 0; i<amtToCheck; i++) {
+        if (map.screen[player.cords.y + checkRelativeToUser[i].y][player.cords.x - checkRelativeToUser[i].x] == touchingWhat) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void gravity(Player *player) {
+    while (!isTouching(*player, *currentMap, PLATFORM, (Cords[]) {cord(0, -1)}, 1)) {
+        player->cords.y += gravityConst;
+    }
+    player->landed = true;
+    player->jumpStreakCount = 0;
+}
+
+
 
 void movePlayer(char input, Player *player) {
     switch (input) {
@@ -156,16 +201,20 @@ void movePlayer(char input, Player *player) {
         case 'd':
             player->cords.x -= player->speed;
         case ' ':
-            player->cords.y -= player->jumpHeight;
+            if (player->landed || player->jumpStreakCount < 2) {
+                player->cords.y += player->jumpHeight;
+                player->jumpStreakCount++;
+            }
         default:
             ;
     }
 }
+
 void renderMap(char **map) {
     erase();
 
-    for (int y = 0; y < 10; y++) {
-        for (int x = 0; x < 20; x++) {
+    for (int y = 0; y < currentMap->size.height; y++) {
+        for (int x = 0; x < currentMap->size.width; x++) {
             mvaddch(y, x, map[y][x]);
         }
     }
@@ -173,15 +222,6 @@ void renderMap(char **map) {
     refresh();
 }
 
-bool touchingSomething(Player player, Map map, CharRep touchingWhat, Cords checkRelativeToUser) {
-    if (player.cords.y > 0) {
-        if (map.screen[player.cords.y + checkRelativeToUser.y][player.cords.x - checkRelativeToUser.x] == touchingWhat) {
-            return true;
-        }
-        return false;
-    }
-    return true;
-}
 
 
 
@@ -204,10 +244,10 @@ int main(int argc, char *argv[]) {
 
 
     while (running) {
-        int input =  getch();
+        char input =  getch();
         movePlayer(input, &player);
+        renderMap(currentMap->screen);
     }
-
 
     endwin();
     return 0;
