@@ -65,7 +65,6 @@ void removeItem(DynamicArr da, int index) {
         return;
     }
     void *base_ptr = &getDat(da)[index];
-
 }
 
 DynamicArr reallocc(void* ptr, const size_t size, const int line) {

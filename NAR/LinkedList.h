@@ -36,6 +36,8 @@ typedef struct AllocationResult {
 
 AllocationResult callocc(size_t count, size_t size, int line);
 
+Node *initNode(void *value, Node *next, Node *prev);
+
 /* Traversal */
 Node getTailNode(Node *node);
 void *getTail(Node *node);

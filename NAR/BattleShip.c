@@ -120,12 +120,12 @@ static int menuCount;
 typedef struct {
     int x;
     int y;
-}Cord;
+}Position;
 
 typedef struct {
     int size;
     int number;
-    Cord *cords;
+    Position *cords;
     bool *hit;
 }Ship;
 
@@ -232,8 +232,8 @@ typedef struct {
     int shipCount;
     int drownedShip;
     TDString boardString;
-    Cord *attacks;
-    Cord *bombs;
+    Position *attacks;
+    Position *bombs;
 }Board;
 
 char **initBoard(const int size) {
